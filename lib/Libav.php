@@ -39,7 +39,7 @@ class Libav {
 
 		$concat = 'concat:' . implode('|', $prepare);
 		$full_ts = CACHE . '/' . $this->filename . '_g.ts';
-		exec(AVCONV . ' -i "' . $concat . '" -c copy ' . $full_ts . " 2>&1", $output);
+		exec(AVCONV . ' -i "' . $concat . '" -c copy ' . $full_ts . ' 2>&1', $output);
 		return $full_ts;
 	}
 
@@ -52,7 +52,7 @@ class Libav {
 			$ts = CACHE . '/' . $filename . '.ts';
 			$data = base64_decode(preg_replace('/^data\:(.*)\;base64\,/', '', $image));
 			file_put_contents($img, $data);
-			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $duration . ' ' . $ts . " 2>&1", $output);
+			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $duration . ' ' . $ts . ' 2>&1', $output);
 			$return[] = $ts;
 			$i++;
 		}
