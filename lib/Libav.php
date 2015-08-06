@@ -5,21 +5,20 @@ class Libav {
 	private $images;
 	private $video_tpl;
 	private $audio_tpl;
-	private $config;
 
-	public function __construct(array $images, $video_tpl, $audio_tpl, array $config = array()){
+	public function __construct(array $images, $video_tpl, $audio_tpl){
 		$this->images = $images;
 		$this->video_tpl = $video_tpl;
 		$this->audio_tpl = $audio_tpl;
-		$this->config = $config ? $config : array('video_rate' => '600k', 'audio_rate' => '48k', 'scale' => '404:720');
 		$this->filename = md5(rand(0, 10000) . time());
  	}
 
 	public function makeVideo(){
 		$full_ts = $this->makeConcat();
-		$mp3 = $this->getAudioTplResource();
+		$m4a = $this->getAudioTplResource();
 		$generate = GENERATE . '/' . $this->filename . '_g.mp4';
-		exec(AVCONV . ' -i ' . $mp3 . ' -i ' . $full_ts . ' -vf scale=' . $this->config['scale'] . ' -c:v libx264 -c:a libvo_aacenc -b:v ' . $this->config['video_rate'] . ' -b:a ' . $this->config['audio_rate']  . ' ' . $generate . ' 2>&1', $output);
+		//exec(AVCONV . ' -i ' . $mp3 . ' -i ' . $full_ts . ' -vf scale=' . $this->config['scale'] . ' -c:v libx264 -c:a libvo_aacenc -b:v ' . $this->config['video_rate'] . ' -b:a ' . $this->config['audio_rate']  . ' ' . $generate . ' 2>&1', $output);
+		exec(AVCONV . ' -i ' . $m4a . ' -i ' . $full_ts . ' -c copy ' . $generate . ' 2>&1', $output);
 		$this->cleanCache();
 		return HOST . '/generate/' . $this->filename . '_g.mp4';
 	}
@@ -52,7 +51,7 @@ class Libav {
 			$ts = CACHE . '/' . $filename . '.ts';
 			$data = base64_decode(preg_replace('/^data\:(.*)\;base64\,/', '', $image));
 			file_put_contents($img, $data);
-			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $duration . ' ' . $ts . ' 2>&1', $output);
+			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $duration . ' -vf scale=' . SCALE . ' -c:v libx264 -b:v ' . VRATE . ' ' . $ts . ' 2>&1', $output);
 			$return[] = $ts;
 			$i++;
 		}
@@ -82,7 +81,7 @@ class Libav {
 			'athree' => 'three',
 			'afour' => 'four',
 			);
-		return $base_path . '/' . $mapping[$this->audio_tpl] . '.mp3';
+		return $base_path . '/' . $mapping[$this->audio_tpl] . '.m4a';
 	}
 
 	private function cleanCache(){
