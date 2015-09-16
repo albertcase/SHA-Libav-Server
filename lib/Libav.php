@@ -3,13 +3,13 @@
 class Libav {
 
 	private $images;
-	private $video_tpl;
-	private $audio_tpl;
+	private $tpl_no;
+	private $duration;
 
-	public function __construct(array $images, $video_tpl, $audio_tpl){
+	public function __construct(array $images, $tpl_no, $duration){
 		$this->images = $images;
-		$this->video_tpl = $video_tpl;
-		$this->audio_tpl = $audio_tpl;
+		$this->tpl_no = $tpl_no;
+		$this->duration = $duration;
 		$this->filename = md5(rand(0, 10000) . time());
  	}
 
@@ -42,7 +42,7 @@ class Libav {
 		return $full_ts;
 	}
 
-	private function convertPngsToTs($duration = '0.33'){
+	private function convertPngsToTs(){
 		$i = 1;
 		$return = array();
 		foreach($this->images as $image){
@@ -51,7 +51,7 @@ class Libav {
 			$ts = CACHE . '/' . $filename . '.ts';
 			$data = base64_decode(preg_replace('/^data\:(.*)\;base64\,/', '', $image));
 			file_put_contents($img, $data);
-			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $duration . ' -vf scale=' . SCALE . ' -c:v libx264 -b:v ' . VRATE . ' ' . $ts . ' 2>&1', $output);
+			exec(AVCONV . ' -loop 1 -i ' . $img . ' -r 25 -t ' . $this->duration . ' -vf scale=' . SCALE . ' -c:v libx264 -b:v ' . VRATE . ' ' . $ts . ' 2>&1', $output);
 			$return[] = $ts;
 			$i++;
 		}
@@ -60,28 +60,16 @@ class Libav {
 
 	private function getVideoTplResource(){
 		$base_path = TEMPLATES . '/';
-		$mapping = array(
-			'vone' => 'one',
-			'vtwo' => 'two',
-			'vthree' => 'three',
-			'vfour' => 'four',
-			);
 		$return = array();
 		for($i = 1; $i <= count($this->images) + 1; $i++) {
-			$return[] = TEMPLATES . '/' . $mapping[$this->video_tpl] . '/' . $i . '.ts';
+			$return[] = TEMPLATES . '/' . $this->tpl_no . '/' . $i . '.ts';
 		}
 		return $return;
 	}
 
 	private function getAudioTplResource(){
 		$base_path = TEMPLATES . '/audio';
-		$mapping = array(
-			'aone' => 'one',
-			'atwo' => 'two',
-			'athree' => 'three',
-			'afour' => 'four',
-			);
-		return $base_path . '/' . $mapping[$this->audio_tpl] . '.m4a';
+		return $base_path . '/' . $this->tpl_no . '.m4a';
 	}
 
 	private function cleanCache(){
